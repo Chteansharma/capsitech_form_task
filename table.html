@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>User Data Table</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+
+      h2 {
+        text-align: center;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 12px;
+        text-align: center;
+      }
+
+      th {
+        background-color: #f4f4f4;
+      }
+
+      .edit-btn {
+        background-color: #f0ad4e;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+
+      .delete-btn {
+        background-color: #d9534f;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+
+      .edit-btn:hover {
+        background-color: #ec971f;
+      }
+
+      .delete-btn:hover {
+        background-color: #c9302c;
+      }
+      .create-btn {
+        padding: 10px 20px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <button class="create-btn" id="createBtn">Create New User</button>
+    <h2>Registered Users</h2>
+
+    <table id="userTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Age</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Course</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <script>
+      function getFromLocalStorage(key) {
+        return new Promise((resolve, reject) => {
+          try {
+            const data = JSON.parse(localStorage.getItem(key)) || [];
+            resolve(data);
+          } catch (error) {
+            reject("Error fetching from localStorage");
+          }
+        });
+      }
+
+      function setToLocalStorage(key, value) {
+        return new Promise((resolve, reject) => {
+          try {
+            localStorage.setItem(key, JSON.stringify(value));
+            resolve();
+          } catch (error) {
+            reject("Error saving to localStorage");
+          }
+        });
+      }
+
+      async function loadTableData() {
+        try {
+          const users = await getFromLocalStorage("users");
+          const tableBody = document.querySelector("#userTable tbody");
+          tableBody.innerHTML = "";
+
+          users.forEach((user, index) => {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+            <td>${user.name}</td>
+            <td>${user.age}</td>
+            <td>${user.email}</td>
+            <td>${user.phone}</td>
+            <td>${user.course}</td>
+            <td>
+              <button onclick="editUser(${index})">Edit</button>
+              <button onclick="deleteUser(${index})">Delete</button>
+            </td>
+          `;
+
+            tableBody.appendChild(row);
+          });
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      async function deleteUser(index) {
+        try {
+          const users = await getFromLocalStorage("users");
+          users.splice(index, 1);
+          await setToLocalStorage("users", users);
+          loadTableData();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      function editUser(index) {
+        getFromLocalStorage("users")
+          .then((users) => {
+            const user = users[index];
+            localStorage.setItem("editUserIndex", index);
+            localStorage.setItem("editUserData", JSON.stringify(user));
+            window.location.href = "edit.html";
+          })
+          .catch((err) => {
+            console.error(err);
+          });
+      }
+
+      window.onload = loadTableData;
+
+      document.getElementById("createBtn").addEventListener("click", () => {
+        localStorage.removeItem("editUserIndex");
+        localStorage.removeItem("editUserData");
+        window.location.href = "index.html";
+      });
+    </script>
+  </body>
+</html>
